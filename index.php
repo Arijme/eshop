@@ -1,8 +1,12 @@
 <?php
 session_start();
-include_once('data.php');
-
-$critere=(isset($_GET['cat']))?$_GET['cat']:true;
+if (!isset($_SESSION["email"]))
+    header("location:/login.php");
+if ($_SESSION['role'] != "admin")
+    die("access denied");
+include_once("../data.php");
+$req = $cnx->query("SELECT products.id,products.title,products.brand,products.price".",category.nom FROM `products`,`category` where products.category_id=category.id ORDER BY products.id");
+$products = $req->fetchAll();
 
 
 ?>
@@ -15,68 +19,59 @@ $critere=(isset($_GET['cat']))?$_GET['cat']:true;
     <title>Document</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
         crossorigin="anonymous">
+        <style>
+            .update::after{
+                content:'🖌' ;
+
+            }
+            .delete::after{
+                content: '🗑';
+            }
+        </style>
 </head>
 
 <body>
-  <?php  include('header.php');
-  $req = $cnx->query("SELECT * FROM `products`");
-  $products = $req->fetchAll();
-  if ($products){
-  $req = $cnx->query("SELECT * FROM `category`");
-  $cat = $req->fetchAll();
-  }
-  else die("erreur connexion");
-  
-  ?>
+
+    <?php include('../header.php') ?>
 
     <div class="container">
         <div class="row mt-5">
-            <div class="col-3">
-                <ul class="list-group">
-                <li class='list-group-item'><a href='index.php'>Tous</a></li>
-                    <?php
-                    foreach ($cat as $c)
-                        echo "<li class='list-group-item'><a href='index.php?cat=".$c['id']."'>".$c['nom']."</a></li>";
-                    ?>
-                </ul>
-            </div>
-            <div class="col-9">
-                <div class="row">
-                    <?php
-                    
-                     foreach ($products as $p)
-                        if ($p['category_id'] == $critere){
-                    ?>
-                    <div class="card col-md-2 m-2">
-                        <img class="card-img-top" width="100" alt="Product 1" src="<?php echo $p['image'] ?>">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <?php echo $p['title'] ?>
-                            </h5>
-                            <p>
-                                <span class='price text-primary'>
-                                    <?php echo $p['price'] ?>
-                                </span>
-                            </p>
-                            <a href="details.php?id=<?php echo $p['id'] ?>" class="btn btn-primary btn-sm add-to-cart" data-product-id="1">show</a>
-                        </div>
-                    </div>
-
+            <a href="ajout.php">ajout product</a>
+            <table>
+                <thead>
+                    <tr>
+                        <th>title</th>
+                        <th>brand</th>
+                        <th>categorie</th>
+                        <th>price</th>
+                        <th>action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($products as $p) { ?>
+                        <tr>
+                            <td>
+                                <?= $p['title'] ?>
+                            </td>
+                            <td>
+                                <?= $p['brand'] ?>
+                            </td>
+                            <td>
+                                <?= $p['nom'] ?>
+                            </td>
+                            <td>
+                                <?= $p['price'] ?>
+                            </td>
+                            <td>
+                                <a href="update.php?id=<?=$p['id']?>" class="btn btn-primary btn-sm"><span class="update"></span></a>
+                                <a href="delete.php?id=<?=$p['id']?>" class="btn btn-danger  btn-sm"><span class="delete"></span></a>
+                            </td>
+                        </tr>
                     <?php } ?>
-
-
-
-
-
-                </div>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
-
-
-
-
-
 </body>
 
 </html>
